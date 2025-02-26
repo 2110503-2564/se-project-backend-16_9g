@@ -1,6 +1,6 @@
 const { models } = require('mongoose');
 const Reservation = require('../models/Reservation');
-const restaurant = require('../models/Restaurant');
+const Restaurant = require('../models/Restaurant');
 
 exports.getReservations=async (req,res,next)=>{
     let query;

@@ -34,11 +34,11 @@ const RestaurantSchema = new mongoose.Schema({
         required: [true, 'Please add a region']
     },
     opentime: {
-        type: Time,
+        type: String,
         required: [true, 'Please add open time']
     },
     closetime: {
-        type: Time,
+        type: String,
         required: [true, 'Please add close time']
     }
 },{
@@ -47,8 +47,8 @@ const RestaurantSchema = new mongoose.Schema({
 });
 
 //Reverse populate with virtuals
-RestaurantSchema.virtual('appointments', {
-    ref: 'Appointment',
+RestaurantSchema.virtual('reservations', {
+    ref: 'Reservation',
     localField: '_id',
     foreignField: 'restaurant',
     justOne: false
