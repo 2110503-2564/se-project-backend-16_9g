@@ -88,13 +88,38 @@ exports.logout = async (req, res, next) => {
   });
 };
 
-exports.logout = async (req, res, next) => {
-  res.cookie("token", "none", {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
-  res.status(200).json({
-    success: true,
-    data: {},
-  });
-};
+exports.changePassword = async (req,res,next) => {
+  try{
+    const {currentPassword, newPassword } = req.body;
+    if(!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter the current password and the new password'
+      });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+    const isMatch = await user.matchPassword(currentPassword);
+
+    if(!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Incorrect current password'
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: 'Update password successfully'
+    });
+
+  } catch(err) {
+    console.log(err.stack);
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot change password'
+    });
+  }
+}
