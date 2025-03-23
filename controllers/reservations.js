@@ -137,6 +137,8 @@ exports.addReservation=async (req,res,next)=> {
 
         //additional - check if reservation time is within the restaurant's open time
         const reservationTime = new Date(req.body.resDate);
+        const [resHours, resMin] = req.body.resTime.split(':').map(Number);
+        reservationTime.setUTCHours(resHours, resMin, 0, 0);
 
         const validReservationTime = checkReservationTime(reservationTime, restaurant.opentime, restaurant.closetime);
 
@@ -185,6 +187,9 @@ exports.updateReservation = async(req,res,next)=>{
             });
         }
         const reservationTime = new Date(req.body.resDate);
+        const [resHours, resMin] = req.body.resTime.split(':').map(Number);
+        reservationTime.setUTCHours(resHours, resMin, 0, 0);
+        
         const validReservationTime = checkReservationTime(reservationTime, restaurant.opentime, restaurant.closetime);
 
         if (!validReservationTime) {

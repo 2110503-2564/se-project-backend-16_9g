@@ -118,3 +118,59 @@ exports.deleteRestaurants= async(req,res,next)=>{
         res.status(400).json({success: false});
     }
 };
+
+exports.reviewRestaurant = async(req,res,next) => {
+    try {
+        const {user, rating, comment} = req.body;
+        const restaurant = await Restaurant.findById(req.params.id);
+
+        if(!restaurant) {
+            return res.status(404).json({ message: "Restaurant not found" });
+        }
+
+        const newReview = {user, rating, comment};
+        restaurant.reviews.push(newReview);
+        await restaurant.save();
+
+        res.status(201).json({success: true, data:restaurant});
+
+    } catch(err) {
+        console.log(err.stack)
+        res.status(500).json({success: false, message: "Can't make a review"})
+    }
+}
+
+exports.getALlReviewsFromRestaurant = async(req,res,next) => {
+    try {
+        const restaurant = await Restaurant.findById(req.params.id)
+        if (!restaurant) return res.status(404).json({ message: "Restaurant not found" });
+
+        res.status(200).json({success: true, count: restaurant.length, data: restaurant.reviews})
+    } catch(err) {
+        console.log(err.stack);
+        res.status(500).json({success: false, message: "Can't get all reviews"})
+    }
+}
+
+exports.deleteReviews = async(req,res,next) => {
+    try {
+        const { id, reviewId } = req.params;
+        const restaurant = await Restaurant.findById(id);
+
+        if(!restaurant) {
+            return res.status(404).json({ message: "Restaurant not found" });
+        }
+
+        restaurant.reviews = restaurant.reviews.filter(
+            (review) => review._id.toString() !== reviewId
+        );
+
+        await restaurant.save();
+        res.status(200).json({ success: true, message: "Deleted review successfully" });
+
+    } catch(err) {
+        console.log(err.stack);
+        res.status(500).json({success: false, message: "Can't delete a review"})
+    }
+}
+
