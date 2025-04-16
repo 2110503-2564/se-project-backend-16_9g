@@ -5,8 +5,18 @@ const ReservationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    resTime: {
+    resStartTime: {
         type: String,
+        required: true
+    },
+    resEndTime: {
+        type: String,
+        required: true
+    },
+    tableSize: {
+        type: String,
+        enum: ["small", "medium", "large"],
+        default: "small",
         required: true
     },
     user: {
