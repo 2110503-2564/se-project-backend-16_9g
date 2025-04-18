@@ -67,20 +67,18 @@ const RestaurantSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add close time']
     },
-    tables: [
-        {
-            size: {
-                type: String,
-                required: true,
-                enum: ['small', 'medium', 'large']
-            },
-            status: {
-                type: String,
-                enum: ['available', 'reserved', 'occupied'],
-                default: 'available'
-            }
-        }
-    ],
+    smallTable: {
+        type: Number,
+        required: [true, 'Please add small table number']   
+    },
+    mediumTable: {
+        type: Number,
+        required: [true, 'Please add medium table number']   
+    },  
+    largeTable: {
+        type: Number,
+        required: [true, 'Please add large table number']   
+    },
     reviews: [reviewSchema]
 },{
     toJSON: {virtuals: true},

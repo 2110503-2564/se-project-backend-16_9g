@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
 
 const ReservationSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: [true, 'Please add a name'],
+        trim: true,
+        maxlength: [100, 'Name can not be more than 100 characters']
+    },
+    contact: {
+        type: String,
+        required: [true, 'Please add a contact number'],
+        trim: true,
+        maxlength: [15, 'Contact number can not be more than 15 characters']
+    },
     resDate: {
         type: String,
         required: true
@@ -28,6 +40,10 @@ const ReservationSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Restaurant',
         required: true
+    },
+    lockedByAdmin: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,
