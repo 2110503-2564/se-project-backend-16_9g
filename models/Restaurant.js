@@ -67,6 +67,20 @@ const RestaurantSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add close time']
     },
+    tables: [
+        {
+            size: {
+                type: String,
+                required: true,
+                enum: ['small', 'medium', 'large']
+            },
+            status: {
+                type: String,
+                enum: ['available', 'reserved', 'occupied'],
+                default: 'available'
+            }
+        }
+    ],
     reviews: [reviewSchema]
 },{
     toJSON: {virtuals: true},

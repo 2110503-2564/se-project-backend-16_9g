@@ -174,3 +174,48 @@ exports.deleteReviews = async(req,res,next) => {
     }
 }
 
+
+exports.changeTableStatus = async (req, res, next) => {
+    try {
+        const { restaurantId } = req.params;
+        const { size, status } = req.body;
+
+        if (!['small', 'medium', 'large'].includes(size)) {
+            return res.status(400).json({ success: false, message: "Invalid table size" });
+        }
+
+        if (!['available', 'reserved', 'occupied'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status value" });
+        }
+
+        // ดึงร้านที่ต้องการมา
+        const restaurant = await Restaurant.findById(restaurantId);
+
+        if (!restaurant) {
+            return res.status(404).json({ success: false, message: "Restaurant not found" });
+        }
+
+        // หา table ที่มี size ตรงกับที่ขอและสถานะไม่ใช่ occupied
+        const table = restaurant.tables.find(
+            (t) => t.size === size && t.status !== status
+        );
+
+        if (!table) {
+            return res.status(404).json({ success: false, message: `No ${size} table found that can be updated.` });
+        }
+
+        // อัปเดตสถานะ
+        table.status = status;
+        await restaurant.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Updated a ${size} table to '${status}'`,
+            data: table
+        });
+
+    } catch (err) {
+        console.error(err.stack);
+        res.status(500).json({ success: false, message: "Server error while updating table status" });
+    }
+};
