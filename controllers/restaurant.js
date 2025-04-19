@@ -185,41 +185,43 @@ exports.changeTableStatus = async (req, res, next) => {
             return res.status(400).json({ success: false, message: "Invalid table size" });
         }
 
-        if (!['available', 'reserved', 'occupied'].includes(status)) {
-            return res.status(400).json({ success: false, message: "Invalid status value" });
+        if (!['reserve', 'free'].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status. Use 'reserve' or 'free'" });
         }
 
-        // ดึงร้านที่ต้องการมา
         const restaurant = await Restaurant.findById(restaurantId);
 
         if (!restaurant) {
             return res.status(404).json({ success: false, message: "Restaurant not found" });
         }
 
-        // หา table ที่มี size ตรงกับที่ขอและสถานะไม่ใช่ occupied
-        const table = restaurant.tables.find(
-            (t) => t.size === size && t.status !== status
-        );
+        const tableKey = `${size}Table`;
 
-        if (!table) {
-            return res.status(404).json({ success: false, message: `No ${size} table found that can be updated.` });
+        if (status === 'reserve') {
+            if (restaurant[tableKey] <= 0) {
+                return res.status(400).json({ success: false, message: `No available ${size} tables to reserve` });
+            }
+            restaurant[tableKey] -= 1;
+        } else if (status === 'free') {
+            restaurant[tableKey] += 1;
         }
 
-        // อัปเดตสถานะ
-        table.status = status;
         await restaurant.save();
 
         res.status(200).json({
             success: true,
-            message: `Updated a ${size} table to '${status}'`,
-            data: table
+            message: `Table status updated: ${status} one ${size} table`,
+            data: {
+                [tableKey]: restaurant[tableKey]
+            }
         });
 
     } catch (err) {
         console.error(err.stack);
-        res.status(500).json({ success: false, message: "Server error while updating table status" });
+        res.status(500).json({ success: false, message: "Server error while updating table count" });
     }
 };
+
 
 exports.checkAvailableTable = async (req, res, next) => {
     try {
@@ -324,5 +326,33 @@ exports.checkAvailableTable = async (req, res, next) => {
             success: false,
             message: "Error checking table availability"
         });
+    }
+};
+
+exports.getAllTableStatus = async (req, res, next) => {
+    try {
+        const { restaurantId } = req.params;
+
+        const restaurant = await Restaurant.findById(restaurantId);
+
+        if (!restaurant) {
+            return res.status(404).json({ success: false, message: "Restaurant not found" });
+        }
+
+        const status = {
+            small: restaurant.smallTable,
+            medium: restaurant.mediumTable,
+            large: restaurant.largeTable
+        };
+
+        res.status(200).json({
+            success: true,
+            message: `Current available table status for ${restaurant.name}`,
+            data: status
+        });
+
+    } catch (err) {
+        console.error(err.stack);
+        res.status(500).json({ success: false, message: "Server error while getting table status" });
     }
 };

@@ -9,7 +9,8 @@ const {
     getALlReviewsFromRestaurant,
     deleteReviews,
     changeTableStatus,
-    checkAvailableTable
+    checkAvailableTable,
+    getAllTableStatus 
 } = require('../controllers/restaurant');
 
 // Include other resources routers
@@ -39,10 +40,13 @@ router.route('/:id/reviews')
 router.route('/:id/reviews/:reviewId')
     .delete(protect, deleteReviews);
 
-router.route('/:resId/available-tables').get(protect, checkAvailableTable);
+router.route('/:resId/available-tables')
+    .get(protect, checkAvailableTable);
 
-// ✅ Route สำหรับเปลี่ยนสถานะโต๊ะ (ไม่จำเป็นต้องใช้ restaurantId ใน URL)
-router.put('/change-table-status', protect, authorize('admin'), changeTableStatus);
+router.get('/:restaurantId/table-status', getAllTableStatus); // ✅
+
+
+router.put('/:restaurantId/change-table-status', protect, authorize('admin'), changeTableStatus);
 
 
 

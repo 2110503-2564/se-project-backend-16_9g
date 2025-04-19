@@ -93,4 +93,7 @@ RestaurantSchema.virtual('reservations', {
     justOne: false
 });
 
+
+
+// Then keep your existing export
 module.exports = mongoose.model('Restaurant', RestaurantSchema);
