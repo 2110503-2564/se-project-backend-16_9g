@@ -10,7 +10,7 @@ exports.getRestaurants = async (req, res, next) => {
     const removeFields = ['select', 'sort', 'page', 'limit'];
 
     removeFields.forEach(param => delete reqQuery[param]);
-    console.log(reqQuery);
+    // console.log(reqQuery);
 
     let queryStr = JSON.stringify(reqQuery);
 
@@ -251,7 +251,7 @@ exports.checkAvailableTable = async (req, res, next) => {
         const allSlots = [];
         for (let hour = openHour; hour <= closeHour - parsedDuration; hour++) {
             const timeString = `${hour.toString().padStart(2, "0")}:00`; // Use consistent time format
-            console.log(`Generated time slot: ${timeString}`);
+            // console.log(`Generated time slot: ${timeString}`);
             allSlots.push(timeString);
         }
 

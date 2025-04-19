@@ -16,7 +16,6 @@ exports.getReservations = async (req, res, next) => {
 
     } else {
         if (req.params.restaurantId) {
-            console.log(req.params.restaurantId);
             query = Reservation.find({ restaurant: req.params.restaurantId }).populate({
                 path: 'restaurant',
                 select: 'name province tel picture'
@@ -58,7 +57,7 @@ exports.getReservation = async (req, res, next) => {
 
         const reservation = await Reservation.findById(req.params.id).populate({
             path: 'restaurant',
-            select: 'name description tel'
+            select: 'name description tel picture'
         }).populate({
             path: 'user',
             select: 'name tel'
