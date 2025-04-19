@@ -280,9 +280,11 @@ exports.checkAvailableTable = async (req, res, next) => {
             tableSize: usableTableType
         });
 
+
         const reservationMap = {}; // key: time string (e.g., '14:00:00'), value: number of tables used
 
         for (const reservation of allReservations) {
+            if(reservation.status === 'cancelled') continue; // Skip cancelled reservations
             const startHour = parseInt(reservation.resStartTime.split(":")[0]);
             const dur = parseInt(reservation.duration || duration); // fallback to requested duration if not stored
             for (let i = 0; i < dur; i++) {
