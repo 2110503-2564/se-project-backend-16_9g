@@ -257,9 +257,9 @@ exports.checkAvailableTable = async (req, res, next) => {
 
         // Determine usable table size
         let usableTableType;
-        if (partySize <= 3) {
+        if (partySize <= 4) {
             usableTableType = 'small';
-        } else if (partySize >= 4 && partySize <= 9) {
+        } else if (partySize >= 5 && partySize <= 9) {
             usableTableType = 'medium';
         } else {
             usableTableType = 'large';
