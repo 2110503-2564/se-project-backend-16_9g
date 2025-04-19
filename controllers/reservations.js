@@ -268,6 +268,53 @@ exports.deleteReservation = async (req, res, next) => {
     }
 };
 
+exports.cancelReservation = async (req, res, next) => {
+    try {
+        const reservation = await Reservation.findById(req.params.id);
+
+        if (!reservation) {
+            return res.status(404).json({
+                success: false,
+                message: `No reservation found with id ${req.params.id}`
+            });
+        }
+
+        // ถ้าไม่ใช่ admin และไม่ใช่เจ้าของ → ห้ามยกเลิก
+        if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to cancel this reservation'
+            });
+        }
+
+        // ตรวจสอบว่าจองนี้ถูกยกเลิกไปแล้วหรือยัง
+        if (reservation.status === 'cancelled') {
+            return res.status(400).json({
+                success: false,
+                message: 'This reservation has already been cancelled'
+            });
+        }
+
+        // เปลี่ยนสถานะเป็น cancelled
+        reservation.status = 'cancelled';
+        await reservation.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Reservation has been cancelled',
+            data: reservation
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Cannot cancel reservation'
+        });
+    }
+};
+
+
 const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {
     const [openHour, openMinute] = resOpenTime.split(':').map(Number);
     const [closeHour, closeMinute] = resCloseTime.split(':').map(Number);
