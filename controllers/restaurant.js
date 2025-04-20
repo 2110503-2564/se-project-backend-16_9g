@@ -331,6 +331,7 @@ exports.checkAvailableTable = async (req, res, next) => {
     }
 };
 
+//getall(web)
 exports.getAllTableStatus = async (req, res, next) => {
     try {
         const { restaurantId } = req.params;

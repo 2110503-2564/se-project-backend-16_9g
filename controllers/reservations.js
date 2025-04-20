@@ -113,7 +113,7 @@ exports.getReservationByUserId = async (req, res, next) => {
     }
 }
 
-
+//commit(web)
 exports.addReservation = async (req, res, next) => {
     try {
         req.body.restaurant = req.params.restaurantId;
