@@ -46,7 +46,7 @@ router.route('/:resId/available-tables')
 router.get('/:restaurantId/table-status', getAllTableStatus); // ✅
 
 
-router.put('/:restaurantId/change-table-status', protect, authorize('admin'), changeTableStatus);
+//router.put('/:restaurantId/change-table-status', protect, authorize('admin'), changeTableStatus);
 
 
 

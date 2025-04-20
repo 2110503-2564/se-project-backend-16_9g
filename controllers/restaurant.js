@@ -176,7 +176,7 @@ exports.deleteReviews = async (req, res, next) => {
 }
 
 
-exports.changeTableStatus = async (req, res, next) => {
+/*exports.changeTableStatus = async (req, res, next) => {
     try {
         const { restaurantId } = req.params;
         const { size, status } = req.body;
@@ -220,7 +220,7 @@ exports.changeTableStatus = async (req, res, next) => {
         console.error(err.stack);
         res.status(500).json({ success: false, message: "Server error while updating table count" });
     }
-};
+};*/
 
 
 exports.checkAvailableTable = async (req, res, next) => {
@@ -334,21 +334,52 @@ exports.getAllTableStatus = async (req, res, next) => {
         const { restaurantId } = req.params;
 
         const restaurant = await Restaurant.findById(restaurantId);
-
         if (!restaurant) {
             return res.status(404).json({ success: false, message: "Restaurant not found" });
         }
 
-        const status = {
-            small: restaurant.smallTable,
-            medium: restaurant.mediumTable,
-            large: restaurant.largeTable
-        };
+        // สมมุติว่าคุณอยากแสดง status ของช่วงเวลา 10:00 ถึง 20:00 (หรือรับผ่าน query ก็ได้)
+        const times = ['10:00', '11:00', '12:00', '13:00']; // เพิ่มได้ตามต้องการ
+        const date = new Date().toISOString().split('T')[0]; // วันนี้ (หรือรับจาก req.query.date)
+
+        // ดึงข้อมูลการจองจาก Reservation model
+        const reservations = await Reservation.find({ 
+            restaurant: restaurantId,
+            date: date
+        });
+
+        const result = times.map(time => {
+            // filter reservation ตามช่วงเวลา
+            const timeReservations = reservations.filter(r => r.time === time);
+
+            // หาจำนวนจองแต่ละขนาด
+            const sizeCount = { small: 0, medium: 0, large: 0 };
+            timeReservations.forEach(r => sizeCount[r.tableSize]++);
+
+            return {
+                date,
+                time,
+                tables: {
+                    small: {
+                        unavailable: sizeCount.small,
+                        available: restaurant.smallTable - sizeCount.small
+                    },
+                    medium: {
+                        unavailable: sizeCount.medium,
+                        available: restaurant.mediumTable - sizeCount.medium
+                    },
+                    large: {
+                        unavailable: sizeCount.large,
+                        available: restaurant.largeTable - sizeCount.large
+                    }
+                }
+            };
+        });
 
         res.status(200).json({
             success: true,
-            message: `Current available table status for ${restaurant.name}`,
-            data: status
+            message: `Table availability for ${restaurant.name}`,
+            data: result
         });
 
     } catch (err) {
@@ -356,3 +387,4 @@ exports.getAllTableStatus = async (req, res, next) => {
         res.status(500).json({ success: false, message: "Server error while getting table status" });
     }
 };
+

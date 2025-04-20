@@ -115,33 +115,25 @@ exports.getReservationByUserId = async (req,res,next) => {
 }
 
 
-exports.addReservation=async (req,res,next)=> {
-    try{
+exports.addReservation = async (req, res, next) => {
+    try {
         req.body.restaurant = req.params.restaurantId;
-
         req.body.user = req.user.id;
-        const existedReservation = await Reservation.find({ user:req.user.id});
-
-        if(existedReservation.length >= 3 && req.user.role !== 'admin'){
-            return res.status(400).json({success:false,message:`the user with id ${req.user.id} has already made 3 reservations`});
-        }
 
         const restaurant = await Restaurant.findById(req.params.restaurantId);
-
-        if(!restaurant){
+        if (!restaurant) {
             return res.status(404).json({
                 success: false,
                 message: `No restaurant with the id of ${req.params.restaurantId}`
             });
         }
 
-        //additional - check if reservation time is within the restaurant's open time
+        // ตรวจสอบเวลาเปิด-ปิดร้าน
         const reservationTime = new Date(req.body.resDate);
         const [resHours, resMin] = req.body.resStartTime.split(':').map(Number);
         reservationTime.setUTCHours(resHours, resMin, 0, 0);
 
         const validReservationTime = checkReservationTime(reservationTime, restaurant.opentime, restaurant.closetime);
-
         if (!validReservationTime) {
             return res.status(400).json({
                 success: false,
@@ -149,25 +141,38 @@ exports.addReservation=async (req,res,next)=> {
             });
         }
 
-        const duplicateReservation = await Reservation.findOne({
-            user: req.user.id,
-            restaurant: req.params.restaurantId,
-            resDate: req.body.resDate,
-            resTime: req.body.resTime,
-          });
-          
-          if (duplicateReservation) {
-            return res.status(400).json({
-              success: false,
-              message: "You already made a reservation at this time.",
+        // เงื่อนไขเฉพาะสำหรับ user (admin ไม่สนใจ)
+        if (req.user.role !== 'admin') {
+            const existedReservation = await Reservation.find({ user: req.user.id });
+            if (existedReservation.length >= 3) {
+                return res.status(400).json({
+                    success: false,
+                    message: `The user with id ${req.user.id} has already made 3 reservations`
+                });
+            }
+
+            const duplicateReservation = await Reservation.findOne({
+                user: req.user.id,
+                restaurant: req.params.restaurantId,
+                resDate: req.body.resDate,
+                resStartTime: req.body.resStartTime
             });
-          }
-          
+
+            if (duplicateReservation) {
+                return res.status(400).json({
+                    success: false,
+                    message: "You already made a reservation at this time."
+                });
+            }
+
+            req.body.lockedByAdmin = false; // บังคับให้ user ปกติไม่สามารถล็อกได้
+        }
 
         const reservation = await Reservation.create(req.body);
 
-        res.status(200).json({success:true, data: reservation });
-    } catch(error){
+        return res.status(200).json({ success: true, data: reservation });
+
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
@@ -175,6 +180,8 @@ exports.addReservation=async (req,res,next)=> {
         });
     }
 };
+
+
 
 
 exports.updateReservation = async(req,res,next)=>{
