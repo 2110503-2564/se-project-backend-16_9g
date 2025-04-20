@@ -358,29 +358,60 @@ exports.getAllTableStatus = async (req, res, next) => {
             date: date
         });
 
+        const timeSlotMap = {};
+
+        times.forEach(time => {
+            timeSlotMap[time] = {
+                small: 0,
+                medium: 0,
+                large: 0
+            };
+        });
+        reservations.forEach(res => {
+            const { resStartTime, resEndTime, tableSize } = res;
+        
+            // Skip if time or tableSize is missing
+            if (!resStartTime || !resEndTime || !tableSize) {
+                console.warn("Skipping reservation due to missing data:", res);
+                return;
+            }
+        
+            const startHour = parseInt(resStartTime.split(":")[0]);
+            const endHour = parseInt(resEndTime.split(":")[0]);
+        
+            for (let h = startHour; h <= endHour; h++) {
+                const slot = `${h.toString().padStart(2, "0")}:00`;
+                if (timeSlotMap[slot]) {
+                    timeSlotMap[slot][tableSize]++;
+                }
+            }
+        });
+
+        
+
         const result = times.map(time => {
             // filter reservation ตามช่วงเวลา
-            const timeReservations = reservations.filter(r => r.resStartTime === time);
+            // const timeReservations = reservations.filter(r => r.resStartTime === time);
 
-            // หาจำนวนจองแต่ละขนาด
-            const sizeCount = { small: 0, medium: 0, large: 0 };
-            timeReservations.forEach(r => sizeCount[r.tableSize]++);
+            // // หาจำนวนจองแต่ละขนาด
+            // const sizeCount = { small: 0, medium: 0, large: 0 };
+            // timeReservations.forEach(r => sizeCount[r.tableSize]++);
 
             return {
                 date,
                 time,
                 tables: {
                     small: {
-                        unavailable: sizeCount.small,
-                        available: restaurant.smallTable - sizeCount.small
+                        unavailable: timeSlotMap[time].small,
+                        available: restaurant.smallTable - timeSlotMap[time].small
                     },
                     medium: {
-                        unavailable: sizeCount.medium,
-                        available: restaurant.mediumTable - sizeCount.medium
+                        unavailable: timeSlotMap[time].medium,
+                        available: restaurant.mediumTable - timeSlotMap[time].medium
                     },
                     large: {
-                        unavailable: sizeCount.large,
-                        available: restaurant.largeTable - sizeCount.large
+                        unavailable: timeSlotMap[time].large,
+                        available: restaurant.largeTable - timeSlotMap[time].large
                     }
                 }
             };
