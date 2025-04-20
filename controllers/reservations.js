@@ -325,3 +325,91 @@ const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {
 
     return reservationTime >= openTime && reservationTime <= closeTime;
 }
+
+exports.checkTableAvailability = async (req, res, next) => {
+    try {
+        const { restaurantId } = req.params;
+        const { resDate, resStartTime, duration, partySize } = req.body;
+
+        const restaurant = await Restaurant.findById(restaurantId);
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: `No restaurant with id ${restaurantId}`
+            });
+        }
+
+        // ไม่อนุญาตให้จองย้อนหลัง
+        const today = new Date();
+        const requestedDate = new Date(resDate);
+        if (requestedDate.setHours(0, 0, 0, 0) < today.setHours(0, 0, 0, 0)) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot make reservation in the past`
+            });
+        }
+
+        // เวลาเริ่มต้นและสิ้นสุดของการจอง
+        const [startHour, startMinute] = resStartTime.split(':').map(Number);
+        const startDateTime = new Date(resDate);
+        startDateTime.setUTCHours(startHour, startMinute, 0, 0);
+        const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
+
+        // เวลาเปิด-ปิดร้าน
+        const [openHour, openMinute] = restaurant.opentime.split(':').map(Number);
+        const [closeHour, closeMinute] = restaurant.closetime.split(':').map(Number);
+        const openTime = new Date(resDate);
+        openTime.setUTCHours(openHour, openMinute, 0, 0);
+        const closeTime = new Date(resDate);
+        closeTime.setUTCHours(closeHour, closeMinute, 0, 0);
+
+        // เช็กว่าเวลาจองอยู่ในช่วงเปิดร้าน
+        if (startDateTime < openTime || endDateTime > closeTime) {
+            return res.status(400).json({
+                success: false,
+                message: `Reservation time must be between ${restaurant.opentime} and ${restaurant.closetime}`
+            });
+        }
+
+        // ดึงรายการจองทั้งหมดของร้านในวันเดียวกัน
+        const existingReservations = await Reservation.find({
+            restaurant: restaurantId,
+            resDate: resDate,
+            status: { $ne: 'cancelled' } // ข้ามรายการที่ยกเลิกแล้ว
+        });
+
+        let overlappingReservations = 0;
+
+        // ตรวจสอบว่ามีการจองช่วงเวลาเดียวกันหรือไม่
+        for (let r of existingReservations) {
+            const [rHour, rMinute] = r.resStartTime.split(':').map(Number);
+            const rStart = new Date(r.resDate);
+            rStart.setUTCHours(rHour, rMinute, 0, 0);
+            const rEnd = new Date(rStart.getTime() + r.duration * 60000);
+
+            // ซ้อนทับ: เวลาจองใหม่เริ่มก่อนสิ้นสุดของเก่า และจบหลังเริ่มของเก่า
+            if (startDateTime < rEnd && endDateTime > rStart) {
+                overlappingReservations++;
+            }
+        }
+
+        if (overlappingReservations >= restaurant.tables) {
+            return res.status(400).json({
+                success: false,
+                message: 'No available tables for the selected time slot'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Table is available'
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error checking table availability'
+        });
+    }
+};
