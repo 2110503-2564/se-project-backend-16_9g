@@ -19,7 +19,7 @@ router.route('/')
     .post(protect, authorize('admin' , 'user'), addReservation);
 
 router.route('/:id')
-    .get(protect, authorize('admin'),  getReservation)
+    .get(protect,  getReservation)
     .put(protect, authorize('admin' , 'user'), updateReservation)
     .delete(protect, authorize('admin' , 'user'), deleteReservation);
 

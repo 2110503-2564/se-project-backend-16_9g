@@ -341,8 +341,15 @@ exports.getAllTableStatus = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Restaurant not found" });
         }
 
-        // สมมุติว่าคุณอยากแสดง status ของช่วงเวลา 10:00 ถึง 20:00 (หรือรับผ่าน query ก็ได้)
-        const times = ['10:00', '11:00', '12:00', '13:00']; // เพิ่มได้ตามต้องการ
+        // Extract open and close hours
+        const openHour = parseInt(restaurant.opentime.split(":")[0]);
+        const closeHour = parseInt(restaurant.closetime.split(":")[0]);
+
+        // Generate hourly times between open and close
+        const times = [];
+        for (let hour = openHour; hour < closeHour; hour++) {
+            times.push(`${hour.toString().padStart(2, "0")}:00`);
+        }
         const date = new Date().toISOString().split('T')[0]; // วันนี้ (หรือรับจาก req.query.date)
 
         // ดึงข้อมูลการจองจาก Reservation model
@@ -353,7 +360,7 @@ exports.getAllTableStatus = async (req, res, next) => {
 
         const result = times.map(time => {
             // filter reservation ตามช่วงเวลา
-            const timeReservations = reservations.filter(r => r.time === time);
+            const timeReservations = reservations.filter(r => r.resStartTime === time);
 
             // หาจำนวนจองแต่ละขนาด
             const sizeCount = { small: 0, medium: 0, large: 0 };

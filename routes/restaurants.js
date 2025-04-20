@@ -43,7 +43,7 @@ router.route('/:id/reviews/:reviewId')
 router.route('/:resId/available-tables')
     .get(protect, checkAvailableTable);
 
-router.get('/:restaurantId/table-status', getAllTableStatus); // ✅
+router.get('/:restaurantId/table-status', protect, authorize('admin'), getAllTableStatus); // ✅
 
 
 //router.put('/:restaurantId/change-table-status', protect, authorize('admin'), changeTableStatus);
