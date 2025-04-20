@@ -6,7 +6,8 @@ const {getReservations,
     updateReservation, 
     deleteReservation, 
     getReservationByUserId,
-    cancelReservation} 
+    cancelReservation,
+    checkTableAvailability} 
     = require('../controllers/reservations');
 
     //commit(web)
@@ -27,5 +28,7 @@ router.route('/user/:id')
     .get(protect, authorize('admin'), getReservationByUserId);
 
 router.route('/cancel/:id').put(protect, authorize('admin', 'user'), cancelReservation);
+
+router.route('/check-availability/:restaurantId').post(protect, checkTableAvailability);
 
 module.exports = router;
