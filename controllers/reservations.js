@@ -2,33 +2,32 @@ const { models } = require('mongoose');
 const Reservation = require('../models/Reservation');
 const Restaurant = require('../models/Restaurant');
 
-exports.getReservations=async (req,res,next)=>{
+exports.getReservations = async (req, res, next) => {
     let query;
 
-    if(req.user.role !== 'admin'){
-        query=Reservation.find({user:req.user.id}).populate({
-            path:'restaurant',
-            select: 'name province tel'
+    if (req.user.role !== 'admin') {
+        query = Reservation.find({ user: req.user.id }).populate({
+            path: 'restaurant',
+            select: 'name province tel picture'
         }).populate({
             path: 'user',
-            select: 'name tel' 
+            select: 'name tel'
         });
 
-    } else{
-        if(req.params.restaurantId) {
-            console.log(req.params.restaurantId);
-            query = Reservation.find({ restaurant: req.params.restaurantId}).populate({
-                path:'restaurant',
-                select: 'name province tel'
+    } else {
+        if (req.params.restaurantId) {
+            query = Reservation.find({ restaurant: req.params.restaurantId }).populate({
+                path: 'restaurant',
+                select: 'name province tel picture'
             }).populate({
                 path: 'user',
-                select: 'name tel' 
+                select: 'name tel'
             });
         } else {
 
-            query=Reservation.find().populate({
+            query = Reservation.find().populate({
                 path: 'restaurant',
-                select: 'name province tel'
+                select: 'name province tel picture'
             }).populate({
                 path: 'user',
                 select: 'name tel'
@@ -40,51 +39,51 @@ exports.getReservations=async (req,res,next)=>{
         const reservations = await query;
 
         res.status(200).json({
-            success:true,
+            success: true,
             count: reservations.length,
             data: reservations
         });
-    } catch(error) {
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
-            message:"Cannot find Reservation"
+            message: "Cannot find Reservation"
         });
     };
 }
 
-exports.getReservation=async (req,res,next)=> {
-    try{
+exports.getReservation = async (req, res, next) => {
+    try {
 
         const reservation = await Reservation.findById(req.params.id).populate({
             path: 'restaurant',
-            select: 'name description tel'
+            select: 'name description tel picture'
         }).populate({
             path: 'user',
-            select: 'name tel' 
+            select: 'name tel'
         });;
-        
-        if(!reservation){
+
+        if (!reservation) {
             return res.status(404).json({
-                success:false,
+                success: false,
                 message: `No reservation with the id of ${req.params.id}`
             });
         }
 
-        res.status(200).json({ success:true, data: reservation} );
-    }catch (error) {
+        res.status(200).json({ success: true, data: reservation });
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
-            message:"Cannot find Reservation"
+            message: "Cannot find Reservation"
         });
     }
 };
 
 //additional method
-exports.getReservationByUserId = async (req,res,next) => {
+exports.getReservationByUserId = async (req, res, next) => {
     try {
-        const reservations = await Reservation.find({user: req.params.id}).populate({
+        const reservations = await Reservation.find({ user: req.params.id }).populate({
             path: 'restaurant',
             select: 'name description tel'
         }).populate({
@@ -92,7 +91,7 @@ exports.getReservationByUserId = async (req,res,next) => {
             select: 'name tel'
         });
 
-        if(!reservations) {
+        if (!reservations) {
             return res.status(404).json({
                 success: false,
                 message: `No reservation with user id of ${req.params.id}`
@@ -105,7 +104,7 @@ exports.getReservationByUserId = async (req,res,next) => {
             data: reservations
         })
 
-    } catch(err) {
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
             success: false,
@@ -119,8 +118,14 @@ exports.addReservation = async (req, res, next) => {
     try {
         req.body.restaurant = req.params.restaurantId;
         req.body.user = req.user.id;
+        const existedReservation = await Reservation.find({ user: req.user.id });
+
+        if (existedReservation.length >= 3 && req.user.role !== 'admin') {
+            return res.status(400).json({ success: false, message: `the user with id ${req.user.id} has already made 3 reservations` });
+        }
 
         const restaurant = await Restaurant.findById(req.params.restaurantId);
+
         if (!restaurant) {
             return res.status(404).json({
                 success: false,
@@ -141,37 +146,24 @@ exports.addReservation = async (req, res, next) => {
             });
         }
 
-        // เงื่อนไขเฉพาะสำหรับ user (admin ไม่สนใจ)
-        if (req.user.role !== 'admin') {
-            const existedReservation = await Reservation.find({ user: req.user.id });
-            if (existedReservation.length >= 3) {
-                return res.status(400).json({
-                    success: false,
-                    message: `The user with id ${req.user.id} has already made 3 reservations`
-                });
-            }
+        const duplicateReservation = await Reservation.findOne({
+            user: req.user.id,
+            restaurant: req.params.restaurantId,
+            resDate: req.body.resDate,
+            resTime: req.body.resTime,
+        });
 
-            const duplicateReservation = await Reservation.findOne({
-                user: req.user.id,
-                restaurant: req.params.restaurantId,
-                resDate: req.body.resDate,
-                resStartTime: req.body.resStartTime
+        if (duplicateReservation) {
+            return res.status(400).json({
+                success: false,
+                message: "You already made a reservation at this time.",
             });
-
-            if (duplicateReservation) {
-                return res.status(400).json({
-                    success: false,
-                    message: "You already made a reservation at this time."
-                });
-            }
-
-            req.body.lockedByAdmin = false; // บังคับให้ user ปกติไม่สามารถล็อกได้
         }
+
 
         const reservation = await Reservation.create(req.body);
 
-        return res.status(200).json({ success: true, data: reservation });
-
+        res.status(200).json({ success: true, data: reservation });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -182,25 +174,24 @@ exports.addReservation = async (req, res, next) => {
 };
 
 
-
-
-exports.updateReservation = async(req,res,next)=>{
-    try{
+exports.updateReservation = async (req, res, next) => {
+    try {
         let reservation = await Reservation.findById(req.params.id);
 
-        if(!reservation) {
+        if (!reservation) {
             return res.status(404).json({
                 success: false,
                 message: `No reservation with the id of ${req.params.id}`
             });
         }
 
-        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
-                success:false,
-                message:`User ${req.user.id} is not authorized to update this reservation`});
+                success: false,
+                message: `User ${req.user.id} is not authorized to update this reservation`
+            });
         }
-        
+
         const restaurant = await Restaurant.findById(reservation.restaurant);
         if (!restaurant) {
             return res.status(404).json({
@@ -211,7 +202,7 @@ exports.updateReservation = async(req,res,next)=>{
         const reservationTime = new Date(req.body.resDate);
         const [resHours, resMin] = req.body.resStartTime.split(':').map(Number);
         reservationTime.setUTCHours(resHours, resMin, 0, 0);
-        
+
         const validReservationTime = checkReservationTime(reservationTime, restaurant.opentime, restaurant.closetime);
 
         if (!validReservationTime) {
@@ -221,57 +212,105 @@ exports.updateReservation = async(req,res,next)=>{
             });
         }
 
-        reservation = await Reservation.findByIdAndUpdate(req.params.id,req.body,{
-            new:true,
-            runValidators:true
+        reservation = await Reservation.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
         });
 
         res.status(200).json({
-            success:true,
+            success: true,
             data: reservation
         });
-        
-    } catch(error){
+
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
-            success:false,
+            success: false,
             message: "Cannot update Reservation"
         });
     }
 };
 
-exports.deleteReservation = async(req,res,next)=>{
-    try{
+exports.deleteReservation = async (req, res, next) => {
+    try {
         const reservation = await Reservation.findById(req.params.id);
 
-        if(!reservation) {
+        if (!reservation) {
             return res.status(404).json({
-                success:false,
-                message:`No reservation with the id of ${req.params.id}`
+                success: false,
+                message: `No reservation with the id of ${req.params.id}`
             });
         }
 
-        if(reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
-                success:false,
-                message:`User ${req.user.id} is not authorized to delete this bootcamp`});
+                success: false,
+                message: `User ${req.user.id} is not authorized to delete this bootcamp`
+            });
         }
 
         await reservation.deleteOne();
 
         res.status(200).json({
-            success:true,
+            success: true,
             data: {}
         });
 
-    } catch(error){
+    } catch (error) {
         console.log(error);
         return res.status(500).json({
-            sucess:false,
-            messsage:"Cannot delete Reservation"
+            sucess: false,
+            messsage: "Cannot delete Reservation"
         });
     }
 };
+
+exports.cancelReservation = async (req, res, next) => {
+    try {
+        const reservation = await Reservation.findById(req.params.id);
+
+        if (!reservation) {
+            return res.status(404).json({
+                success: false,
+                message: `No reservation found with id ${req.params.id}`
+            });
+        }
+
+        // ถ้าไม่ใช่ admin และไม่ใช่เจ้าของ → ห้ามยกเลิก
+        if (reservation.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to cancel this reservation'
+            });
+        }
+
+        // ตรวจสอบว่าจองนี้ถูกยกเลิกไปแล้วหรือยัง
+        if (reservation.status === 'cancelled') {
+            return res.status(400).json({
+                success: false,
+                message: 'This reservation has already been cancelled'
+            });
+        }
+
+        // เปลี่ยนสถานะเป็น cancelled
+        reservation.status = 'cancelled';
+        await reservation.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Reservation has been cancelled',
+            data: reservation
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Cannot cancel reservation'
+        });
+    }
+};
+
 
 const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {
     const [openHour, openMinute] = resOpenTime.split(':').map(Number);

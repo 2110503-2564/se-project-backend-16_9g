@@ -10,7 +10,7 @@ exports.getRestaurants = async (req, res, next) => {
     const removeFields = ['select', 'sort', 'page', 'limit'];
 
     removeFields.forEach(param => delete reqQuery[param]);
-    console.log(reqQuery);
+    // console.log(reqQuery);
 
     let queryStr = JSON.stringify(reqQuery);
 
@@ -251,15 +251,15 @@ exports.checkAvailableTable = async (req, res, next) => {
         const allSlots = [];
         for (let hour = openHour; hour <= closeHour - parsedDuration; hour++) {
             const timeString = `${hour.toString().padStart(2, "0")}:00`; // Use consistent time format
-            console.log(`Generated time slot: ${timeString}`);
+            // console.log(`Generated time slot: ${timeString}`);
             allSlots.push(timeString);
         }
 
         // Determine usable table size
         let usableTableType;
-        if (partySize <= 3) {
+        if (partySize <= 4) {
             usableTableType = 'small';
-        } else if (partySize >= 4 && partySize <= 9) {
+        } else if (partySize >= 5 && partySize <= 9) {
             usableTableType = 'medium';
         } else {
             usableTableType = 'large';
@@ -280,9 +280,11 @@ exports.checkAvailableTable = async (req, res, next) => {
             tableSize: usableTableType
         });
 
+
         const reservationMap = {}; // key: time string (e.g., '14:00:00'), value: number of tables used
 
         for (const reservation of allReservations) {
+            if(reservation.status === 'cancelled') continue; // Skip cancelled reservations
             const startHour = parseInt(reservation.resStartTime.split(":")[0]);
             const dur = parseInt(reservation.duration || duration); // fallback to requested duration if not stored
             for (let i = 0; i < dur; i++) {
