@@ -31,6 +31,11 @@ const UserSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user'
     },
+    currentPoints: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {

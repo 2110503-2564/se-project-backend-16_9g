@@ -118,7 +118,8 @@ exports.addReservation = async (req, res, next) => {
     try {
         req.body.restaurant = req.params.restaurantId;
         req.body.user = req.user.id;
-        const existedReservation = (await Reservation.find({ user: req.user.id })).filter(reservation => reservation.status === 'pending');
+        const existedReservation = (await Reservation.find({ user: req.user.id }))
+        .filter(reservation => reservation.status === 'pending' && reservation.lockedByAdmin === false);
 
         if (existedReservation.length >= 3 && req.user.role !== 'admin') {
             return res.status(400).json({ success: false, message: `the user with id ${req.user.id} has already made 3 reservations` });
@@ -151,7 +152,8 @@ exports.addReservation = async (req, res, next) => {
             restaurant: req.params.restaurantId,
             resDate: req.body.resDate,
             resTime: req.body.resTime,
-            status: 'pending'
+            status: 'pending',
+            lockedByAdmin: false
         });
 
         if (duplicateReservation) {

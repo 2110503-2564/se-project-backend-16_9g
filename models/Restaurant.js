@@ -69,15 +69,18 @@ const RestaurantSchema = new mongoose.Schema({
     },
     smallTable: {
         type: Number,
-        required: [true, 'Please add small table number']   
+        required: [true, 'Please add small table number'],
+        min: 1
     },
     mediumTable: {
         type: Number,
-        required: [true, 'Please add medium table number']   
+        required: [true, 'Please add medium table number'],
+        min: 1   
     },  
     largeTable: {
         type: Number,
-        required: [true, 'Please add large table number']   
+        required: [true, 'Please add large table number'],
+        min: 1   
     },
     reviews: [reviewSchema]
 },{

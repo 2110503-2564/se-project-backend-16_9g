@@ -277,7 +277,8 @@ exports.checkAvailableTable = async (req, res, next) => {
         const allReservations = await Reservation.find({
             restaurant: resId,
             resDate: date,
-            tableSize: usableTableType
+            tableSize: usableTableType,
+            status: 'pending'
         });
 
 
@@ -295,16 +296,30 @@ exports.checkAvailableTable = async (req, res, next) => {
         }
 
         for (const time of allSlots) {
-            const reservedCount = reservationMap[time] || 0;
+            const startHour = parseInt(time.split(":")[0]);
             const totalTables = restaurant[tableFieldMap[usableTableType]] || 0;
-            const available = totalTables - reservedCount;
-
-            if (available > 0) {
+        
+            let isAvailable = true;
+            let minAvailable = totalTables;
+        
+            for (let i = 0; i < parsedDuration; i++) {
+                const hourToCheck = `${(startHour + i).toString().padStart(2, "0")}:00`;
+                const reservedCount = reservationMap[hourToCheck] || 0;
+                const available = totalTables - reservedCount;
+        
+                if (available <= 0) {
+                    isAvailable = false;
+                    break;
+                }
+                minAvailable = Math.min(minAvailable, available);
+            }
+        
+            if (isAvailable) {
                 results.push({
-                    time : `${time} - ${parseInt(time.split(":")[0]) + parsedDuration}:00`,
+                    time : `${time} - ${startHour + parsedDuration}:00`,
                     availableTables: {
                         type : usableTableType,
-                        amount: available
+                        amount: minAvailable
                     }
                 });
             }
@@ -350,12 +365,13 @@ exports.getAllTableStatus = async (req, res, next) => {
         for (let hour = openHour; hour < closeHour; hour++) {
             times.push(`${hour.toString().padStart(2, "0")}:00`);
         }
-        const date = new Date().toISOString().split('T')[0]; // วันนี้ (หรือรับจาก req.query.date)
+        const date = new Date().toLocaleDateString('sv-SE'); // วันนี้ (หรือรับจาก req.query.date)
 
         // ดึงข้อมูลการจองจาก Reservation model
         const reservations = await Reservation.find({ 
             restaurant: restaurantId,
-            date: date
+            date: date,
+            status: 'pending'
         });
 
         const timeSlotMap = {};
