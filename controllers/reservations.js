@@ -314,6 +314,58 @@ exports.cancelReservation = async (req, res, next) => {
     }
 };
 
+// incomplete reservation
+exports.incompleteReservation = async (req, res, next) => {
+    try {
+        const reservation = await Reservation.findById(req.params.id);
+
+        if (!reservation) {
+            return res.status(404).json({
+                success: false,
+                message: `No reservation found with id ${req.params.id}`
+            });
+        }
+
+        // if not admin -> you cant do this
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to change the status of this reservation'
+            });
+        }
+
+        if (reservation.status !== 'pending' || reservation.lockedByAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Only pending and unlocked reservations can be changed to incomplete'
+            });
+        }
+
+        if (reservation.status === 'incomplete') {
+            return res.status(400).json({
+                success: false,
+                message: 'This reservation has already been changed the status to incomplete'
+            });
+        }
+
+        // change status to incomplete
+        reservation.status = 'incomplete';
+        await reservation.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'This reservation status has been changed to incomplete',
+            data: reservation
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Cannot change the reservation status to incomplete'
+        });
+    }
+};
 
 const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {
     const [openHour, openMinute] = resOpenTime.split(':').map(Number);
