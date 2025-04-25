@@ -287,6 +287,14 @@ exports.cancelReservation = async (req, res, next) => {
             });
         }
 
+        // updated
+        if (reservation.status !== 'pending' || reservation.lockedByAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Only pending and unlocked reservations can be cancelled'
+            });
+        }
+
         // ตรวจสอบว่าจองนี้ถูกยกเลิกไปแล้วหรือยัง
         if (reservation.status === 'cancelled') {
             return res.status(400).json({
