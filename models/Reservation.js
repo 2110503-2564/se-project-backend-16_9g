@@ -45,9 +45,9 @@ const ReservationSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    status: {  // เพิ่มฟิลด์นี้เพื่อบ่งชี้ว่า reservation ถูกยกเลิก
+    status: {
         type: String,
-        enum: ['pending', 'cancelled'],
+        enum: ['pending', 'cancelled', 'complete', 'incomplete'], // add complete & incomplete
         default: 'pending'
     },
     createdAt: {
