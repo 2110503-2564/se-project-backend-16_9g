@@ -394,28 +394,50 @@ exports.completeReservation = async (req, res, next) => {
             });
         }
 
-        // เปลี่ยนสถานะเป็น complete
+        // 1. Change reservation status to complete
         reservation.status = 'complete';
         await reservation.save();
 
-        // เพิ่ม point ให้ user
-        const user = await User.findById(reservation.user);
-        const pointToAdd = 10; // กำหนดแต้มที่จะให้ — ปรับตาม logic ได้
-        user.currentPoint = (user.currentPoint || 0) + pointToAdd;
+        // 2. Find user
+        const user = await User.findById(reservation.user).select('currentPoints name email');
+        if (!user) {
+            return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+        }
+
+        // 3. Add points automatically
+        const pointsEarned = 10; // You can adjust the amount here
+        user.currentPoints = (user.currentPoints || 0) + pointsEarned;
         await user.save();
 
-        // บันทึก point transaction
+
+
+        // 4. Record in point transaction history
         await PointTransaction.create({
             user: user._id,
-            amount: pointToAdd,
             type: 'earn',
-            description: `Earned from completing reservation ${reservation._id}`
+            source: 'reservation',
+            sourceId: reservation._id.toString(),
+            amount: pointsEarned,
+            message: 'Points earned from completed reservation'
         });
 
+        await Notification.create({
+            user: user._id,
+            title: 'Points Earned!',
+            message: `You have earned ${pointsEarned} points from your reservation.`
+        });
+
+        // 5. Return success response
         return res.status(200).json({
             success: true,
-            message: 'Reservation marked as complete. Points awarded.',
-            data: reservation
+            message: `Reservation completed. ${pointsEarned} points added to user.`,
+            data: {
+                reservation,
+                userPoints: user.currentPoints
+            }
         });
 
     } catch (error) {
@@ -426,6 +448,55 @@ exports.completeReservation = async (req, res, next) => {
         });
     }
 };
+
+
+/* Manually add points to a user
+exports.receivePoints = async (req, res, next) => {
+    try {
+        const { userId, amount, source, sourceId, message } = req.body;
+
+        if (!userId || !amount || !source || !sourceId) {
+            return res.status(400).json({
+                success: false,
+                message: 'userId, amount, source, and sourceId are required'
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        user.currentPoints = (user.currentPoints || 0) + amount;
+        await user.save();
+
+        await PointTransaction.create({
+            user: user._id,
+            type: 'earn',
+            source,
+            sourceId,
+            amount,
+            message: message || 'Points manually awarded'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Points added successfully',
+            data: user
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add points'
+        });
+    }
+};*/
+
 
 
 const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {

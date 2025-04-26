@@ -39,10 +39,12 @@ app.use(limiter);
 const restaurants = require('./routes/restaurants');
 const auth = require('./routes/auth');
 const reservations = require('./routes/reservations');
+const notifications = require('./routes/notifications');
 
 app.use('/api/stb/restaurants', restaurants);
 app.use('/api/stb/auth', auth);
 app.use('/api/stb/reservations', reservations);
+app.use('/api/stb/notifications', notifications);
 
 const PORT = process.env.PORT || 5000;
 
