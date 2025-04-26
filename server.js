@@ -46,7 +46,10 @@ const pointTransaction = require('./routes/pointTransaction');
 app.use('/api/stb/restaurants', restaurants);
 app.use('/api/stb/auth', auth);
 app.use('/api/stb/reservations', reservations);
+<<<<<<< HEAD
 app.use('/api/stb/notifications', notifications);
+=======
+>>>>>>> 9af48b855926206230ff5f3dfbe49dbfcc6db366
 app.use('/api/stb/pointtransactions', pointTransaction);
 app.use('/api/stb/user', user);
 
