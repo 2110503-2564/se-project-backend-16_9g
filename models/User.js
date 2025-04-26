@@ -2,6 +2,23 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const rewardSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String
+    },
+    expire: {
+        type: String
+    }
+})
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -36,6 +53,7 @@ const UserSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    rewards: [rewardSchema],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {
