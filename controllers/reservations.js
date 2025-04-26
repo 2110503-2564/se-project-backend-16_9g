@@ -1,6 +1,8 @@
 const { models } = require('mongoose');
 const Reservation = require('../models/Reservation');
 const Restaurant = require('../models/Restaurant');
+const User = require('../models/User');
+const PointTransaction = require('../models/PointTransaction');
 
 exports.getReservations = async (req, res, next) => {
     let query;
@@ -374,6 +376,57 @@ exports.incompleteReservation = async (req, res, next) => {
         });
     }
 };
+
+exports.completeReservation = async (req, res, next) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Only admin can complete a reservation'
+            });
+        }
+
+        const reservation = await Reservation.findById(req.params.id);
+        if (!reservation || reservation.status !== 'pending') {
+            return res.status(404).json({
+                success: false,
+                message: 'Reservation not found or already completed'
+            });
+        }
+
+        // เปลี่ยนสถานะเป็น complete
+        reservation.status = 'complete';
+        await reservation.save();
+
+        // เพิ่ม point ให้ user
+        const user = await User.findById(reservation.user);
+        const pointToAdd = 10; // กำหนดแต้มที่จะให้ — ปรับตาม logic ได้
+        user.currentPoint = (user.currentPoint || 0) + pointToAdd;
+        await user.save();
+
+        // บันทึก point transaction
+        await PointTransaction.create({
+            user: user._id,
+            amount: pointToAdd,
+            type: 'earn',
+            description: `Earned from completing reservation ${reservation._id}`
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Reservation marked as complete. Points awarded.',
+            data: reservation
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to complete reservation'
+        });
+    }
+};
+
 
 const checkReservationTime = (reservationTime, resOpenTime, resCloseTime) => {
     const [openHour, openMinute] = resOpenTime.split(':').map(Number);
