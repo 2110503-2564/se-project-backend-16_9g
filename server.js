@@ -40,10 +40,12 @@ const restaurants = require('./routes/restaurants');
 const auth = require('./routes/auth');
 const reservations = require('./routes/reservations');
 const user = require('./routes/user');
+const pointTransaction = require('./routes/pointTransaction');
 
 app.use('/api/stb/restaurants', restaurants);
 app.use('/api/stb/auth', auth);
 app.use('/api/stb/reservations', reservations);
+app.use('/api/stb/pointtransactions', pointTransaction);
 
 const PORT = process.env.PORT || 5000;
 
