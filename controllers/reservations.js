@@ -399,17 +399,19 @@ exports.completeReservation = async (req, res, next) => {
         await reservation.save();
 
         // เพิ่ม point ให้ user
-        const user = await User.findById(reservation.user);
+        const user = await User.findById(reservation.user._id);
         const pointToAdd = 10; // กำหนดแต้มที่จะให้ — ปรับตาม logic ได้
-        user.currentPoint = (user.currentPoint || 0) + pointToAdd;
+        user.currentPoints = (user.currentPoints || 0) + pointToAdd;
         await user.save();
 
         // บันทึก point transaction
         await PointTransaction.create({
             user: user._id,
             amount: pointToAdd,
+            source: 'reservation',
+            sourceId: reservation._id,
             type: 'earn',
-            description: `Earned from completing reservation ${reservation._id}`
+            message: `Earned from completing reservation ${reservation._id}`
         });
 
         return res.status(200).json({

@@ -2,6 +2,23 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const rewardSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String
+    },
+    expire: {
+        type: String
+    }
+})
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -36,6 +53,7 @@ const UserSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    rewards: [rewardSchema],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {
@@ -45,6 +63,10 @@ const UserSchema = new mongoose.Schema({
 });
 
 UserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        return next(); // if password wasn't changed, skip hashing
+    }
+
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
