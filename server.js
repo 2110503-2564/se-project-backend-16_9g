@@ -45,7 +45,11 @@ const pointTransaction = require('./routes/pointTransaction');
 app.use('/api/stb/restaurants', restaurants);
 app.use('/api/stb/auth', auth);
 app.use('/api/stb/reservations', reservations);
+<<<<<<< Updated upstream
 app.use('/api/stb/pointtransactions', pointTransaction);
+=======
+app.use('/api/stb/user', user);
+>>>>>>> Stashed changes
 
 const PORT = process.env.PORT || 5000;
 
