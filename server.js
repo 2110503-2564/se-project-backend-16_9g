@@ -39,6 +39,7 @@ app.use(limiter);
 const restaurants = require('./routes/restaurants');
 const auth = require('./routes/auth');
 const reservations = require('./routes/reservations');
+const user = require('./routes/user');
 
 app.use('/api/stb/restaurants', restaurants);
 app.use('/api/stb/auth', auth);

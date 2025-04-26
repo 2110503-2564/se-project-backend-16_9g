@@ -9,7 +9,8 @@ const {getReservations,
     cancelReservation,
     incompleteReservation,
     checkTableAvailability,
-    completeReservation} 
+    completeReservation,
+    getUserPointByUserId} 
     = require('../controllers/reservations');
 
     //commit(web)
@@ -39,4 +40,5 @@ router.route('/complete/:id').put(protect, authorize('admin'), completeReservati
 
 router.route('/check-availability/:restaurantId').post(protect, checkTableAvailability);
 
+router.route('/user/:id/point').get(protect, authorize('admin', 'user'), getUserPointByUserId);
 module.exports = router;
