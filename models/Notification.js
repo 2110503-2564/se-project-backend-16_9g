@@ -10,6 +10,11 @@ const notificationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    type : {
+        type: String,
+        enum: ['earn', 'redeem', 'complete', 'incomplete'],
+        required: true,
+    },
     message: {
         type: String,
         required: true

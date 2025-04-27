@@ -36,3 +36,21 @@ exports.getNotifications = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
     }
 };
+
+exports.markAllAsRead = async (req, res, next) => {
+    try {
+        const result = await Notification.updateMany(
+            { user: req.user.id, isRead: false }, // Only unread notifications
+            { $set: { isRead: true } }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'All notifications marked as read successfully',
+            data: result,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Failed to update notifications' });
+    }
+};

@@ -3,6 +3,7 @@ const Reservation = require('../models/Reservation');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const PointTransaction = require('../models/PointTransaction');
+const Notification = require('../models/Notification')
 
 exports.getReservations = async (req, res, next) => {
     let query;
@@ -336,6 +337,14 @@ exports.incompleteReservation = async (req, res, next) => {
             });
         }
 
+        const user = await User.findById(reservation.user).select('currentPoints name email');
+        if (!user) {
+            return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+        }
+
         // if not admin -> you cant do this
         if (req.user.role !== 'admin') {
             return res.status(403).json({
@@ -361,6 +370,13 @@ exports.incompleteReservation = async (req, res, next) => {
         // change status to incomplete
         reservation.status = 'incomplete';
         await reservation.save();
+
+        await Notification.create({
+            user: user._id,
+            title: 'Incomplete Reservation',
+            type: 'incomplete',
+            message: `The reservation ${reservation._id} was incomplete. You didn't earn points`
+        });
 
         res.status(200).json({
             success: true,
@@ -427,6 +443,7 @@ exports.completeReservation = async (req, res, next) => {
         await Notification.create({
             user: user._id,
             title: 'Points Earned!',
+            type: 'earn',
             message: `You have earned ${pointsEarned} points from your reservation.`
         });
 
