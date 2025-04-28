@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: PointTransactions
- *   description: Manage user's point transactions
+ *   description: API for managing user's point transactions
  */
 
 /**

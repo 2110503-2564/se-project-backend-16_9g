@@ -134,7 +134,7 @@ router.get('/:restaurantId/table-status', protect, authorize('admin'), getAllTab
  * @swagger
  * tags:
  *   - name: Restaurants
- *     description: The restaurants managing API
+ *     description: API for managing restaurants 
  */
 
 /**
