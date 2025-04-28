@@ -7,7 +7,10 @@ const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
-const hpp=require('hpp');
+const hpp = require('hpp');
+
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUI = require('swagger-ui-express');
 
 dotenv.config({ path: './config/config.env' });
 
@@ -58,3 +61,17 @@ process.on('unhandledRejection', (err, promise) => {
     console.log(`Error: ${err.message}`);
     server.close(() => process.exit(1));
 });
+
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API',
+            version: '1.0.0',
+            description: 'Restaurant Reservation API'
+        }
+    },
+    apis: ['./routes/*.js'],
+};
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
