@@ -6,46 +6,47 @@ const PointTransaction = require('../models/PointTransaction');
 const Notification = require('../models/Notification')
 
 exports.getReservations = async (req, res, next) => {
-    let query;
-
-    if (req.user.role !== 'admin') {
-        query = Reservation.find({ user: req.user.id }).populate({
-            path: 'restaurant',
-            select: 'name province tel picture'
-        }).populate({
-            path: 'user',
-            select: 'name tel'
-        });
-
-    } else {
-        if (req.params.restaurantId) {
-            query = Reservation.find({ restaurant: req.params.restaurantId }).populate({
-                path: 'restaurant',
-                select: 'name province tel picture'
-            }).populate({
-                path: 'user',
-                select: 'name tel'
-            });
-        } else {
-
-            query = Reservation.find().populate({
-                path: 'restaurant',
-                select: 'name province tel picture'
-            }).populate({
-                path: 'user',
-                select: 'name tel'
-            });
-        }
-    }
-
     try {
-        const reservations = await query;
+        let query;
 
-        res.status(200).json({
-            success: true,
-            count: reservations.length,
-            data: reservations
-        });
+        if (req.user.role !== 'admin') {
+            query = Reservation.find({ user: req.user.id }).populate({
+                path: 'restaurant',
+                select: 'name province tel picture'
+            }).populate({
+                path: 'user',
+                select: 'name tel'
+            });
+
+        } else {
+            if (req.params.restaurantId) {
+                query = Reservation.find({ restaurant: req.params.restaurantId }).populate({
+                    path: 'restaurant',
+                    select: 'name province tel picture'
+                }).populate({
+                    path: 'user',
+                    select: 'name tel'
+                });
+            } else {
+
+                query = Reservation.find().populate({
+                    path: 'restaurant',
+                    select: 'name province tel picture'
+                }).populate({
+                    path: 'user',
+                    select: 'name tel'
+                });
+            }
+        }
+
+        
+            const reservations = await query;
+
+            res.status(200).json({
+                success: true,
+                count: reservations.length,
+                data: reservations
+            });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
