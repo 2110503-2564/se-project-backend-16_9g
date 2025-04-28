@@ -154,7 +154,249 @@ router.get('/:restaurantId/table-status', protect, authorize('admin'), getAllTab
  *                 $ref: '#/components/schemas/Restaurant'
  */
 
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}:
+ *   get:
+ *     summary: Get a single restaurant by ID
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The restaurant ID
+ *     responses:
+ *       200:
+ *         description: The restaurant data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Restaurant'
+ *       400:
+ *         description: Restaurant not found
+ */
 
+/**
+ * @swagger
+ * /api/stb/restaurants:
+ *   post:
+ *     summary: Create a new restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Restaurant'
+ *     responses:
+ *       201:
+ *         description: Restaurant created successfully
+ */
 
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}:
+ *   put:
+ *     summary: Update an existing restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Restaurant'
+ *     responses:
+ *       200:
+ *         description: Restaurant updated successfully
+ *       400:
+ *         description: Invalid restaurant ID
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}:
+ *   delete:
+ *     summary: Delete a restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *     responses:
+ *       200:
+ *         description: Restaurant deleted successfully
+ *       404:
+ *         description: Restaurant not found
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}/reviews:
+ *   post:
+ *     summary: Add a review to a restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user
+ *               - rating
+ *               - comment
+ *             properties:
+ *               user:
+ *                 type: string
+ *               rating:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 5
+ *               comment:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Review added successfully
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}/reviews:
+ *   get:
+ *     summary: Get all reviews of a restaurant
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *     responses:
+ *       200:
+ *         description: List of reviews
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   user:
+ *                     type: string
+ *                   rating:
+ *                     type: number
+ *                   comment:
+ *                     type: string
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{id}/reviews/{reviewId}:
+ *   delete:
+ *     summary: Delete a review from a restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Review deleted successfully
+ *       404:
+ *         description: Review or restaurant not found
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{resId}/available-tables:
+ *   get:
+ *     summary: Check available tables at a restaurant
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: resId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: duration
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: partySize
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Available time slots and tables
+ */
+
+/**
+ * @swagger
+ * /api/stb/restaurants/{restaurantId}/table-status:
+ *   get:
+ *     summary: Get current table status (available/unavailable) for today
+ *     tags: [Restaurants]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The restaurant ID
+ *     responses:
+ *       200:
+ *         description: Table status per time slot
+ */
 
 module.exports = router;
