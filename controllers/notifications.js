@@ -3,13 +3,14 @@ const Notification = require('../models/Notification');
 // Add notification
 exports.addNotification = async (req, res) => {
     try {
-        const { title, message } = req.body;
+        const { title, message, type } = req.body;
 
         const notification = await Notification.create({
             user: req.user.id,
             title,
-            message
-        });
+            message,
+            type
+        });        
 
         res.status(201).json({
             success: true,
