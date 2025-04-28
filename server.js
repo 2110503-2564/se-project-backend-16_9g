@@ -69,9 +69,21 @@ const swaggerOptions = {
             title: 'API',
             version: '1.0.0',
             description: 'Restaurant Reservation API'
-        }
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
     },
     apis: ['./routes/*.js'],
 };
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+// Mount the reservation routes
+app.use('/api/stb/reservations', reservations); 
