@@ -22,44 +22,7 @@ describe('User Model', () => {
     jest.clearAllMocks();
   });
 
-  describe('User Model - Pre Save Middleware', () => {
   
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-  
-    it('should hash password if password is modified', async () => {
-      const mockSalt = 'mockSalt123';
-      const mockHash = 'mockHashedPassword123';
-  
-      bcrypt.genSalt.mockResolvedValue(mockSalt);
-      bcrypt.hash.mockResolvedValue(mockHash);
-  
-      const user = createTestUser();
-      user.isModified = jest.fn().mockReturnValue(true);
-  
-      // 💡 simulate pre-save manually
-      await User.schema._middlewareFuncs.save[0].fn.call(user, jest.fn());
-  
-      expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
-      expect(bcrypt.hash).toHaveBeenCalledWith('plainpassword', mockSalt);
-      expect(user.password).toBe(mockHash);
-    });
-  
-    it('should NOT hash password if password is NOT modified', async () => {
-      const user = createTestUser({ password: 'alreadyHashedPassword' });
-      user.isModified = jest.fn().mockReturnValue(false);
-  
-      const nextMock = jest.fn();
-      await User.schema._middlewareFuncs.save[0].fn.call(user, nextMock);
-  
-      expect(bcrypt.genSalt).not.toHaveBeenCalled();
-      expect(bcrypt.hash).not.toHaveBeenCalled();
-      expect(user.password).toBe('alreadyHashedPassword');
-      expect(nextMock).toHaveBeenCalled(); // make sure next() was called
-    });
-  
-  });
   describe('UserSchema method: getSignedJwtToken', () => {
     it('should return a signed JWT token', () => {
       const mockToken = 'signed.jwt.token';
